@@ -56,7 +56,12 @@ class WithTracker extends Component {
   _data = {}
 
   componentWillMount() {
-    this.resolveData()
+    this.resolve()
+  }
+
+  componentWillUnmount() {
+    if (this.trackerHandler)
+      this.trackerHandler.stop()
   }
 
   render() {
@@ -66,9 +71,8 @@ class WithTracker extends Component {
     return children({ data })
   }
 
-  resolveData = () => {
-    const { props } = this
-    const { list, item, data } = props
+  resolve = () => {
+    const { list, item, data } = this.props
 
     if (list)
       return this.resolveList()
@@ -76,28 +80,34 @@ class WithTracker extends Component {
     if (item)
       return this.resolveItem()
 
-    this.resolveTracker()
+    this.resolveData()
   }
 
-  resolveTracker = () => {
+  resolveData = () => {
     const { list, item, data } = this.props
-    for (const key in data) {
-      const value = this.resolveValue(data[key])
-      this.setData(key, value)
-    }
-    this.setState({ data: this.getData() })
+    this.trackerHandler = Meteor.autorun(computation => {
+      for (const key in data) {
+        const value = this.resolveValue(data[key])
+        this.setData(key, value)
+      }
+      this.setState({ data: this.getData() })
+    })
   }
 
   resolveList = () => {
     const { list } = this.props
-    const value = this.resolveValue(list)
-    this.setState({ data: { list: value } })
+    this.trackerHandler = Meteor.autorun(computation => {
+      const value = this.resolveValue(list)
+      this.setState({ data: { list: value } })
+    })
   }
 
   resolveItem = () => {
     const { item } = this.props
     const value = this.resolveValue(item)
-    this.setState({ data: { item: value } })
+      this.trackerHandler = Meteor.autorun(computation => {
+      this.setState({ data: { item: value } })
+    })
   }
 
   resolveValue = value => {
