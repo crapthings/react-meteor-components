@@ -136,9 +136,9 @@ class WithTracker extends Component {
 // Meteor.call wrapper
 class WithCall extends Component {
   state = {
-    ready: true,
     error: undefined,
     data: undefined,
+    ready: false,
   }
 
   componentWillMount() {
@@ -149,7 +149,7 @@ class WithCall extends Component {
     const { ready, error, data } = this.state
     const { children, loading } = this.props
 
-    if (ready)
+    if (!ready)
       return loading || config.loading
 
     return (
@@ -170,7 +170,7 @@ class WithCall extends Component {
   }
 
   callback = (error, data) => {
-    const ready = false
+    const ready = true
     error
       ? this.setState({ ready, error })
       : this.setState({ ready, data })
