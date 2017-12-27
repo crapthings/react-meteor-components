@@ -3,8 +3,15 @@
 ```javascript
 import React, { Component } from 'react'
 import { render } from 'react-dom'
+import lfc from 'lodash-form-collector'
 
-import { WithSubscribe, WithTracker, WithCall } from 'meteor/crapthings:react-meteor-components'
+import {
+  WithSubscribe,
+  WithTracker,
+  WithCall,
+  WithUserId,
+  WithoutUserId,
+} from 'meteor/crapthings:react-meteor-components'
 
 const Demo1 = () => {
   return (
@@ -28,7 +35,7 @@ const Demo2 = () => {
     <div>
       <h3>subscribe to an reactive item</h3>
       <WithSubscribe name='user'>
-        <WithTracker item={context => Users.findOne()}>
+        <WithTracker item={context => Users.findOne({ name: { $exists: true } })}>
           {({ data: { item: { _id, name} } }) => (
             <div>{name}</div>
           )}
@@ -76,11 +83,50 @@ const Demo4 = () => {
   )
 }
 
+const Demo5 = () => {
+  return (
+    <div>
+      <h3>with user id</h3>
+      <WithUserId>
+        <button onClick={() => Meteor.logout()}>logout</button>
+      </WithUserId>
+    </div>
+  )
+}
+
+
+const Demo6 = () => {
+  return (
+    <div>
+      <h3>without user id</h3>
+      <WithoutUserId>
+        <form onSubmit={evt => {
+          evt.preventDefault()
+          const { username, password } = lfc(evt.target)
+          Meteor.loginWithPassword(username, password)
+        }}>
+          <div>
+            <input type='input' name='username' defaultValue='demo' />
+          </div>
+          <div>
+            <input type='password' name='password' defaultValue='demo' />
+          </div>
+          <div>
+            <input type='submit' />
+          </div>
+        </form>
+      </WithoutUserId>
+    </div>
+  )
+}
+
 const Example = () => <div id='example-wrapper'>
   <Demo1 />
   <Demo2 />
   <Demo3 />
   <Demo4 />
+  <Demo5 />
+  <Demo6 />
 </div>
 
 Meteor.startup(function () {

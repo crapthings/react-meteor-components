@@ -10,8 +10,8 @@ const { loading } = config
 // Meteor.subscribe wrapper
 class WithSubscribe extends Component {
   state = {
-    error: undefined,
     ready: false,
+    error: undefined,
   }
 
   componentWillMount() {
@@ -105,8 +105,8 @@ class WithTracker extends Component {
 
   resolveItem = () => {
     const { item } = this.props
-    const value = this.resolveValue(item)
-      this.trackerHandler = Meteor.autorun(computation => {
+    this.trackerHandler = Meteor.autorun(computation => {
+      const value = this.resolveValue(item)
       this.setState({ data: { item: value } })
     })
   }
@@ -136,9 +136,9 @@ class WithTracker extends Component {
 // Meteor.call wrapper
 class WithCall extends Component {
   state = {
+    ready: false,
     error: undefined,
     data: undefined,
-    ready: false,
   }
 
   componentWillMount() {
@@ -177,6 +177,67 @@ class WithCall extends Component {
   }
 }
 
+// without Meteor.userId wrapper
+class WithUserId extends Component {
+  state = {
+    ready: false,
+    userId: null,
+  }
+
+  componentWillMount() {
+    this.resolveUserId()
+  }
+
+  render() {
+    const { ready, userId } = this.state
+    const { children, loading } = this.props
+
+    if (!userId)
+      return null
+
+    if (userId && !ready)
+      return loading || config.loading
+
+    return children
+  }
+
+  resolveUserId() {
+    this.trackerHandler = Meteor.autorun(computation => {
+      const userId = Meteor.userId()
+      const ready = !Meteor.loggingIn()
+      this.setState({ userId, ready })
+    })
+  }
+}
+
+// without Meteor.userId wrapper
+class WithoutUserId extends Component {
+  state = {
+    userId: null,
+  }
+
+  componentWillMount() {
+    this.resolveUserId()
+  }
+
+  render() {
+    const { userId } = this.state
+    const { children } = this.props
+
+    if (userId)
+      return null
+
+    return children
+  }
+
+  resolveUserId() {
+    this.trackerHandler = Meteor.autorun(computation => {
+      const userId = Meteor.userId()
+      this.setState({ userId })
+    })
+  }
+}
+
 // utils
 
 function getArgs(props) {
@@ -199,5 +260,7 @@ module.exports = {
   WithSubscribe,
   WithTracker,
   WithCall,
+  WithUserId,
+  WithoutUserId,
   config,
 }
