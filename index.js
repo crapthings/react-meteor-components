@@ -7,8 +7,10 @@ const config = {
 
 const { loading } = config
 
+// Meteor.subscribe wrapper
 class WithSubscribe extends Component {
   state = {
+    error: undefined,
     ready: false,
   }
 
@@ -26,16 +28,7 @@ class WithSubscribe extends Component {
     return ready ? children : (loading || config.loading)
   }
 
-  getSubscriptionArgs = () => {
-    const { name, args } = this.props
-    if (!args)
-      return [name]
-
-    if (!Array.isArray(args))
-      return [name, args]
-
-    return [name].concat(args)
-  }
+  getSubscriptionArgs = () => getArgs(this.props)
 
   subscribe = () => {
     const subscriptionArgs = this.getSubscriptionArgs()
@@ -52,7 +45,15 @@ class WithSubscribe extends Component {
   }
 }
 
+// Meteor.autorun wrapper
 class WithTracker extends Component {
+  state = {
+    error: undefined,
+    data: undefined,
+    list: [],
+    item: undefined,
+  }
+
   _data = {}
 
   componentWillMount() {
@@ -132,12 +133,62 @@ class WithTracker extends Component {
   }
 }
 
+// Meteor.call wrapper
 class WithCall extends Component {
+  state = {
+    ready: true,
+    error: undefined,
+    data: undefined,
+  }
+
+  componentWillMount() {
+    this.resolveCall()
+  }
+
   render() {
+    const { ready, error, data } = this.state
+    const { children, loading } = this.props
+
+    if (ready)
+      return loading || config.loading
+
     return (
-      <div>with call</div>
+      children({ data })
     )
   }
+
+  getCallArgs = () => getArgs(this.props)
+
+  resolveCall = () => {
+    const callArgs = this.getCallArgs()
+    const [callback] = callArgs.slice(-1)
+
+    if (!isFunction(callback))
+      callArgs.push(this.callback)
+
+    Meteor.call.apply(Meteor.call, callArgs)
+  }
+
+  callback = (error, data) => {
+    const ready = false
+    error
+      ? this.setState({ ready, error })
+      : this.setState({ ready, data })
+  }
+}
+
+// utils
+
+function getArgs(props) {
+  const { name, args } = props
+
+  if (!args)
+    return [name]
+
+  if (!Array.isArray(args))
+    return [name, args]
+
+  return [name].concat(args)
 }
 
 function isFunction(fn) {
