@@ -40,10 +40,8 @@ class WithSubscribe extends Component {
   }
 
   unsubscribe = () => {
-    if (this.trackerHandler) {
+    if (this.trackerHandler)
       this.trackerHandler.stop()
-      this.subscribeHandler.stop()
-    }
   }
 }
 
