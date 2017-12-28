@@ -14,7 +14,7 @@ class WithSubscribe extends Component {
     error: undefined,
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.subscribe()
   }
 
@@ -40,8 +40,10 @@ class WithSubscribe extends Component {
   }
 
   unsubscribe = () => {
-    if (this.trackerHandler)
+    if (this.trackerHandler) {
       this.trackerHandler.stop()
+      this.subscribeHandler.stop()
+    }
   }
 }
 
