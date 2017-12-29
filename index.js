@@ -3,6 +3,7 @@ import { withTracker } from 'meteor/react-meteor-data'
 
 const config = {
   loading: <div>loading</div>,
+  error: error => <div>{JSON.stringify(error)}</div>
 }
 
 const { loading } = config
@@ -11,6 +12,7 @@ const { loading } = config
 class WithSubscribe extends Component {
   state = {
     ready: false,
+    stop: false,
     error: undefined,
   }
 
@@ -23,8 +25,13 @@ class WithSubscribe extends Component {
   }
 
   render() {
-    const { ready } = this.state
+    const { ready, stop, error } = this.state
     const { children, loading } = this.props
+    if (error)
+      return config.error(error)
+
+    if (stop)
+      return null
 
     if (!ready)
       return loading || config.loading
@@ -39,7 +46,13 @@ class WithSubscribe extends Component {
       : children(props)
   }
 
-  getSubscriptionArgs = () => getArgs(this.props)
+  getSubscriptionArgs = () => {
+    const args = getArgs(this.props)
+    const callbackObj = args.slice(-1)
+    if (!callbackObj.onStop)
+      args.push({ onStop: this.onStop })
+    return args
+  }
 
   subscribe = () => {
     const subscriptionArgs = this.getSubscriptionArgs()
@@ -55,6 +68,13 @@ class WithSubscribe extends Component {
       this.trackerHandler.stop()
     if (this.subscribeHandler)
       this.subscribeHandler.stop()
+  }
+
+  onStop = error => {
+    if (error)
+      return this.setState({ error })
+
+    this.setState({ stop: true })
   }
 }
 
@@ -257,6 +277,9 @@ class WithoutUserId extends Component {
 function getArgs(props) {
   const { name, args } = props
 
+  if (!name && !isString(name))
+    throw new Meteor.Error('name must be specified')
+
   if (!args)
     return [name]
 
@@ -266,8 +289,12 @@ function getArgs(props) {
   return [name].concat(args)
 }
 
+function isString(string) {
+  return string && Object.prototype.toString.call(string) === '[object String]' ? true : false
+}
+
 function isFunction(fn) {
-  return fn && {}.toString.call(fn) === '[object Function]' ? true : false
+  return fn && Object.prototype.toString.call(fn) === '[object Function]' ? true : false
 }
 
 module.exports = {
