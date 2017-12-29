@@ -51,9 +51,10 @@ class WithSubscribe extends Component {
 class WithTracker extends Component {
   state = {
     error: undefined,
-    data: undefined,
-    list: [],
-    item: undefined,
+    data: {
+      list: [],
+      item: undefined,
+    },
   }
 
   _data = {}
@@ -99,11 +100,9 @@ class WithTracker extends Component {
 
   resolveList = () => {
     const { list } = this.props
-    this.trackerHandler = Tracker.nonreactive(() => {
-      return Tracker.autorun(computation => {
-        const value = this.resolveValue(list)
-        this.setState({ data: { list: value } })
-      })
+    this.trackerHandler = Tracker.autorun(computation => {
+      const value = this.resolveValue(list)
+      this.setState({ data: { list: value } })
     })
   }
 
@@ -134,11 +133,6 @@ class WithTracker extends Component {
 
   setData = (key, value) => {
     this._data[key] = value
-  }
-
-  recomputation = () => {
-    this.trackerHandler && this.trackerHandler.stop()
-    this.forceUpdate()
   }
 }
 
