@@ -222,6 +222,11 @@ class WithUserId extends Component {
     this.resolveUserId()
   }
 
+  componentWillUnmount() {
+    if (this.trackerHandler)
+      this.trackerHandler.stop()
+  }
+
   render() {
     const { ready, userId } = this.state
     const { children, loading } = this.props
@@ -252,6 +257,11 @@ class WithoutUserId extends Component {
 
   componentWillMount() {
     this.resolveUserId()
+  }
+
+  componentWillUnmount() {
+    if (this.trackerHandler)
+      this.trackerHandler.stop()
   }
 
   render() {
