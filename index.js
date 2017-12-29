@@ -25,7 +25,18 @@ class WithSubscribe extends Component {
   render() {
     const { ready } = this.state
     const { children, loading } = this.props
-    return ready ? children : (loading || config.loading)
+
+    if (!ready)
+      return loading || config.loading
+
+    const props = {
+      _subscribeHandler: this.subscribeHandler,
+      _subscriptionId: this.subscribeHandler.subscriptionId,
+    }
+
+    return children.$$typeof
+      ? children
+      : children(props)
   }
 
   getSubscriptionArgs = () => getArgs(this.props)
