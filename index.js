@@ -301,10 +301,8 @@ class WithUser extends Component {
     const { user } = this.state
     const { children } = this.props
 
-    if (!children || children && children.$$typeof) {
-      console.error('WithUser\'s children should be a function that return component')
-      return null
-    }
+    if (!children || children && children.$$typeof)
+      throw new Error('WithUser\'s children should be a function that return component')
 
     if (!user)
       return null
@@ -326,7 +324,7 @@ function getArgs(props) {
   const { name, args } = props
 
   if (!name && !isString(name))
-    throw new Meteor.Error('name must be specified')
+    throw new Error('name must be specified')
 
   if (!args)
     return [name]
