@@ -282,6 +282,44 @@ class WithoutUserId extends Component {
   }
 }
 
+// Meteor.user() wrapper
+class WithUser extends Component {
+  state = {
+    user: undefined,
+  }
+
+  componentWillMount() {
+    this.resolveUser()
+  }
+
+  componentWillUnmount() {
+    if (this.trackerHandler)
+      this.trackerHandler.stop()
+  }
+
+  render() {
+    const { user } = this.state
+    const { children } = this.props
+
+    if (!children || children && children.$$typeof) {
+      console.error('WithUser\'s children should be a function that return component')
+      return null
+    }
+
+    if (!user)
+      return null
+
+    return children(user)
+  }
+
+  resolveUser() {
+    this.trackerHandler = Meteor.autorun(computation => {
+      const user = Meteor.user()
+      this.setState({ user })
+    })
+  }
+}
+
 // utils
 
 function getArgs(props) {
@@ -313,5 +351,6 @@ module.exports = {
   WithCall,
   WithUserId,
   WithoutUserId,
+  WithUser,
   config,
 }
