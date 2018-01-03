@@ -147,7 +147,7 @@ class WithTracker extends Component {
 
   resolveValue = value => {
     if (isFunction(value))
-      value = value()
+      value = value(this)
 
     if (value instanceof Mongo.Cursor)
       value = value.fetch()
