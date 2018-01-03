@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { withTracker } from 'meteor/react-meteor-data'
+import { render } from 'react-dom'
 
 const config = {
   loading: <div>loading</div>,
@@ -318,6 +318,15 @@ class WithUser extends Component {
   }
 }
 
+function Mount(component, options = { id: 'react-root' }) {
+  Meteor.startup(function () {
+    const div = document.createElement('div')
+    div.id = options.id
+    document.body.appendChild(div)
+    render(component, div)
+  })
+}
+
 // utils
 
 function getArgs(props) {
@@ -350,5 +359,6 @@ module.exports = {
   WithUserId,
   WithoutUserId,
   WithUser,
+  Mount,
   config,
 }

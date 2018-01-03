@@ -6,6 +6,6 @@ Package.describe({
 })
 
 Package.on_use(function (api) {
-  api.use(['ecmascript', 'mongo', 'react-meteor-data'])
+  api.use(['ecmascript', 'mongo'])
   api.mainModule('index.js')
 })
