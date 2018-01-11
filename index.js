@@ -344,12 +344,16 @@ function getArgs(props) {
   return [name].concat(args)
 }
 
-function isString(string) {
-  return string && Object.prototype.toString.call(string) === '[object String]' ? true : false
+function isString(target) {
+  return isType(target, 'String')
 }
 
-function isFunction(fn) {
-  return fn && Object.prototype.toString.call(fn) === '[object Function]' ? true : false
+function isFunction(target) {
+  return isType(target, 'Function')
+}
+
+function isType(target, type) {
+  return Object.prototype.toString.call(target) === `[object ${type}]` ? true : false
 }
 
 module.exports = {
