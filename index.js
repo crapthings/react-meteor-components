@@ -3,10 +3,35 @@ import { render } from 'react-dom'
 
 const config = {
   loading: <div>loading</div>,
-  error: error => <div>{JSON.stringify(error)}</div>
+
+  fault: <div>fault</div>,
+
+  error: error => <div>
+    {JSON.stringify(error)}
+  </div>,
 }
 
 const { loading } = config
+
+// React Error Boundary
+class WithFault extends Component {
+  state = {
+    fault: false,
+  }
+
+  componentDidCatch(error, info) {
+    this.setState({ fault: true, error, info })
+  }
+
+  render() {
+    const { fault, error, info } = this.state
+
+    if (!fault)
+      return this.props.children
+
+    return config.fault
+  }
+}
 
 // Meteor.subscribe wrapper
 class WithSubscribe extends Component {
@@ -318,11 +343,25 @@ class WithUser extends Component {
   }
 }
 
-function Mount(component, options = { id: 'react-root' }) {
+function Mount(component, options = {}) {
+  const defaultOptions = {
+    id: 'react-root',
+    withFault: true,
+  }
+
+  options = Object.assign({}, defaultOptions, options)
+
   Meteor.startup(function () {
     const div = document.createElement('div')
     div.id = options.id
     document.body.appendChild(div)
+
+
+    if (options.withFault)
+      return render(<WithFault>
+        {component}
+      </WithFault>, div)
+
     render(component, div)
   })
 }
@@ -357,6 +396,7 @@ function isType(target, type) {
 }
 
 module.exports = {
+  WithFault,
   WithSubscribe,
   WithTracker,
   WithCall,
