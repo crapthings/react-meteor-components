@@ -1,35 +1,38 @@
 import React, { Component } from 'react'
 import { render } from 'react-dom'
+import { Meteor } from 'meteor/meteor'
 
 const config = {
-  loading: <div>loading</div>,
-
-  fault: <div>fault</div>,
-
-  error: error => <div>
-    {JSON.stringify(error)}
-  </div>,
+  loading: props => <div>loading</div>,
+  exception: props => <div>caught exception</div>,
+  error: ({ error: { error, reason, details } }) => <div>{error} {reason} {details}</div>,
 }
 
-const { loading } = config
+const {
+  loading: defaultLoadingComponent,
+  exception: defaultExceptionComponent,
+  error: defaultErrorComponent,
+} = config
 
-// React Error Boundary
-class WithFault extends Component {
+// React Catch Exception wrapper
+class WithException extends Component {
   state = {
-    fault: false,
+    exception: false,
   }
 
   componentDidCatch(error, info) {
-    this.setState({ fault: true, error, info })
+    this.setState({ exception: true, error, info }, () => {
+      this.props.onException && this.props.onException(error, info)
+    })
   }
 
   render() {
-    const { fault, error, info } = this.state
+    const { exception, error, info } = this.state
 
-    if (!fault)
+    if (!exception)
       return this.props.children
 
-    return config.fault
+    return defaultExceptionComponent({ error, info })
   }
 }
 
@@ -52,14 +55,15 @@ class WithSubscribe extends Component {
   render() {
     const { ready, stop, error } = this.state
     const { children, loading } = this.props
+
     if (error)
-      return config.error(error)
+      return defaultErrorComponent({ error })
 
     if (stop)
       return null
 
     if (!ready)
-      return loading || config.loading
+      return loading || defaultLoadingComponent()
 
     const props = {
       _subscribeHandler: this.subscribeHandler,
@@ -72,7 +76,7 @@ class WithSubscribe extends Component {
   }
 
   getSubscriptionArgs = () => {
-    const args = getArgs(this.props)
+    const args = this.args = getArgs(this.props)
     const callbackObj = args.slice(-1)
     if (!callbackObj.onStop)
       args.push({ onStop: this.onStop })
@@ -84,7 +88,7 @@ class WithSubscribe extends Component {
     this.trackerHandler = Meteor.autorun(computation => {
       this.subscribeHandler = Meteor.subscribe.apply(Meteor.subscribe, subscriptionArgs)
       const ready = this.subscribeHandler.ready()
-      this.setState({ ready })
+      ready && this.setState({ ready })
     })
   }
 
@@ -209,7 +213,7 @@ class WithCall extends Component {
     const { children, loading } = this.props
 
     if (!ready)
-      return loading || config.loading
+      return loading || defaultLoadingComponent()
 
     return (
       children({ data })
@@ -260,7 +264,7 @@ class WithUserId extends Component {
       return null
 
     if (userId && !ready)
-      return loading || config.loading
+      return loading || defaultLoadingComponent()
 
     return children
   }
@@ -268,8 +272,9 @@ class WithUserId extends Component {
   resolveUserId() {
     this.trackerHandler = Meteor.autorun(computation => {
       const userId = Meteor.userId()
-      const ready = !Meteor.loggingIn()
-      this.setState({ userId, ready })
+      const ready = !Accounts.loggingIn()
+      if (userId && ready)
+        this.setState({ userId, ready })
     })
   }
 }
@@ -346,7 +351,8 @@ class WithUser extends Component {
 function Mount(component, options = {}) {
   const defaultOptions = {
     id: 'react-root',
-    withFault: true,
+    WithException: true,
+    onException: undefined,
   }
 
   options = Object.assign({}, defaultOptions, options)
@@ -356,11 +362,10 @@ function Mount(component, options = {}) {
     div.id = options.id
     document.body.appendChild(div)
 
-
-    if (options.withFault)
-      return render(<WithFault>
+    if (options.WithException)
+      return render(<WithException onException={options.onException}>
         {component}
-      </WithFault>, div)
+      </WithException>, div)
 
     render(component, div)
   })
@@ -396,7 +401,7 @@ function isType(target, type) {
 }
 
 module.exports = {
-  WithFault,
+  WithException,
   WithSubscribe,
   WithTracker,
   WithCall,

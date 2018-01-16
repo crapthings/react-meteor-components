@@ -6,6 +6,10 @@ Package.describe({
 })
 
 Package.on_use(function (api) {
-  api.use(['ecmascript', 'mongo'])
-  api.mainModule('index.js')
+  api.use([
+    'ecmascript',
+    'mongo',
+    'accounts-base',
+  ])
+  api.mainModule('index.js', 'client')
 })
